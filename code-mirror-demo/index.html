@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%; margin: 0; padding: 0">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Title</title>
+    <link rel="stylesheet" href="lib/codemirror.css">
+    <link rel="stylesheet" href="lib/theme/monokai.css">
+    <link rel="stylesheet" href="lib/theme/paraiso-dark.css">
+    <link rel="stylesheet" href="lib/theme/3024-night.css">
+    <script src="lib/codemirror.js"></script>
+    <script src="lib/addon/edit/matchbrackets.js"></script>
+    <script src="lib/mode/shell/shell.js"></script>
+</head>
+<body style="width: 100%; height: 100%; margin: 0; padding: 0">
+<textarea style="display: none" id=code>
+#!/bin/bash
+
+# clone the repository
+git clone http://github.com/garden/tree
+
+# generate HTTPS credentials
+cd tree
+openssl genrsa -aes256 -out https.key 1024
+openssl req -new -nodes -key https.key -out https.csr
+openssl x509 -req -days 365 -in https.csr -signkey https.key -out https.crt
+cp https.key{,.orig}
+openssl rsa -in https.key.orig -out https.key
+
+# start the server in HTTPS mode
+cd web
+sudo node ../server.js 443 'yes' &gt;&gt; ../node.log &amp;
+
+# here is how to stop the server
+for pid in `ps aux | grep 'node ../server.js' | awk '{print $2}'` ; do
+  sudo kill -9 $pid 2&gt; /dev/null
+done
+
+exit 0</textarea>
+<div id="editor" style="width: 100%; height: 100%;overflow: hidden; font-size: 16px"></div>
+<script>
+    var defaultVal = document.querySelector('#code').value;
+    console.log({fg: document.querySelector('#utils')})
+    var container = document.querySelector('#editor');
+    var mycodeMirror = CodeMirror(container, {
+        value: defaultVal,      // 文本域默认显示的文本
+        mode: "shell",          // 模式
+        theme: "3024-night",    // CSS样式选择
+        indentUnit: 2,          // 缩进单位，默认2
+        smartIndent: true,      // 是否智能缩进
+        tabSize: 4,             // Tab缩进，默认4
+        readOnly: true,         // 是否只读，默认false
+        showCursorWhenSelecting: true,
+//        lineNumbers: true,        // 是否显示行号
+        matchBrackets: true     // 当设置为true时，只要光标位于Bracket（大、中、圆括号）旁边，就会突出显示匹配括号
+    });
+
+    mycodeMirror.setSize('auto', 'auto');
+
+    var mycodeMirror1 = CodeMirror(container, {
+        value: "$>",            // 文本域默认显示的文本
+        mode: "shell",          // 模式
+        theme: "3024-night",    // CSS样式选择
+        indentUnit: 2,          // 缩进单位，默认2
+        smartIndent: true,      // 是否智能缩进
+        tabSize: 4,             // Tab缩进，默认4
+        readOnly: false,        // 是否只读，默认false
+        showCursorWhenSelecting: true,
+//        lineNumbers: true,      // 是否显示行号
+        matchBrackets: true,      // 当设置为true时，只要光标位于Bracket（大、中、圆括号）旁边，就会突出显示匹配括号
+//        scrollbarStyle: 'none'    // 设置滚动条
+    });
+
+    refreshSize();
+    mycodeMirror1.on('change', function (handle, obj) {
+    });
+
+    var strOfStartLine = '$>'
+    mycodeMirror1.on('beforeChange', function (handle, obj) {
+        var from = obj.from;
+        var to = obj.to;
+        var text = obj.text;
+        var origin = obj.origin;
+
+        // 禁止修改行首
+        if (isStartOfLine(from, text)) {
+            obj.cancel();
+        }
+
+        // 是否输入换行符
+        if (isInputLF(text, origin)) {
+            obj.cancel();
+            var str = mycodeMirror1.getLine(0);
+
+            // clear命令清空
+            if (new RegExp(wrapperStr(strOfStartLine) + '\\s*clear$').test(str)) {
+                mycodeMirror.setValue('');
+            } else {
+                appendLine(mycodeMirror, str);
+            }
+
+            mycodeMirror1.setValue(strOfStartLine);
+            mycodeMirror1.setCursor(0, strOfStartLine.length);
+
+            setTimeout(function () {
+                refreshSize();
+            }, 0);
+        }
+    });
+
+    mycodeMirror1.on('cursorActivity', function () {
+        var len = strOfStartLine.length;
+        // 禁止光标出现在行首
+        if (mycodeMirror1.getCursor().ch < len) {
+            mycodeMirror1.setCursor(len);
+        }
+    });
+
+    mycodeMirror1.on('beforeSelectionChange', function () {
+    });
+
+    function wrapperStr(str) {
+        return str.replace(/[$^/]/g, function (matchStr) {
+            return '\\' + matchStr;
+        });
+    }
+
+    function isStartOfLine(from, text) {
+        return from.ch >= 0 && from.ch <= 1 && text[0] !== strOfStartLine;
+    }
+    // 是否输入换行符
+    function isInputLF(text, type) {
+        return (type === '+input' && text.length === 2 && text[0] === '' && text[1] === '');
+    }
+
+    function refreshSize() {
+        var totalHeight = container.clientHeight;
+        var h_1 = container.children[0].clientHeight;
+        if (totalHeight <= h_1 + 50) {
+            container.style.overflow = 'auto';
+        } else {
+            container.style.overflow = 'hidden';
+        }
+        var h_2 = totalHeight - h_1;
+        h_2 = Math.max(h_2, 50);
+        mycodeMirror1.setSize('auto', h_2);
+    }
+
+    function appendLine(handle, str) {
+        str = str || "";
+        handle.setValue(handle.getValue() + '\n' + str)
+    }
+    function appendLines(handle, num) {
+        var str = '';
+        while (num > 0) {
+            str += '\n';
+        }
+        handle.setValue(handle.getValue() + str);
+    }
+
+    function prependLine(handle, num) {
+        var str = '';
+        while (num > 0) {
+            str += '\n';
+        }
+        handle.setValue(str + handle.getValue())
+    }
+
+</script>
+</body>
+</html>
