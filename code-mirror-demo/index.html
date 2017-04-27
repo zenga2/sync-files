@@ -58,7 +58,7 @@ exit 0</textarea>
 
     mycodeMirror.setSize('auto', 'auto');
 
-    var mycodeMirror1 = CodeMirror(container, {
+    var inputBox = CodeMirror(container, {
         value: "$>",            // 文本域默认显示的文本
         mode: "shell",          // 模式
         theme: "3024-night",    // CSS样式选择
@@ -73,11 +73,11 @@ exit 0</textarea>
     });
 
     refreshSize();
-    mycodeMirror1.on('change', function (handle, obj) {
+    inputBox.on('change', function (handle, obj) {
     });
 
     var strOfStartLine = '$>'
-    mycodeMirror1.on('beforeChange', function (handle, obj) {
+    inputBox.on('beforeChange', function (handle, obj) {
         var from = obj.from;
         var to = obj.to;
         var text = obj.text;
@@ -91,7 +91,7 @@ exit 0</textarea>
         // 是否输入换行符
         if (isInputLF(text, origin)) {
             obj.cancel();
-            var str = mycodeMirror1.getLine(0);
+            var str = inputBox.getLine(0);
 
             // clear命令清空
             if (new RegExp(wrapperStr(strOfStartLine) + '\\s*clear$').test(str)) {
@@ -100,8 +100,8 @@ exit 0</textarea>
                 appendLine(mycodeMirror, str);
             }
 
-            mycodeMirror1.setValue(strOfStartLine);
-            mycodeMirror1.setCursor(0, strOfStartLine.length);
+            inputBox.setValue(strOfStartLine);
+            inputBox.setCursor(0, strOfStartLine.length);
 
             setTimeout(function () {
                 refreshSize();
@@ -109,15 +109,15 @@ exit 0</textarea>
         }
     });
 
-    mycodeMirror1.on('cursorActivity', function () {
+    inputBox.on('cursorActivity', function () {
         var len = strOfStartLine.length;
         // 禁止光标出现在行首
-        if (mycodeMirror1.getCursor().ch < len) {
-            mycodeMirror1.setCursor(len);
+        if (inputBox.getCursor().ch < len) {
+            inputBox.setCursor(len);
         }
     });
 
-    mycodeMirror1.on('beforeSelectionChange', function () {
+    inputBox.on('beforeSelectionChange', function () {
     });
 
     function wrapperStr(str) {
@@ -144,7 +144,7 @@ exit 0</textarea>
         }
         var h_2 = totalHeight - h_1;
         h_2 = Math.max(h_2, 50);
-        mycodeMirror1.setSize('auto', h_2);
+        inputBox.setSize('auto', h_2);
     }
 
     function appendLine(handle, str) {
