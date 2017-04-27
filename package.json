@@ -1,7 +1,7 @@
 {
   "name": "sync-files",
   "version": "1.0.0",
-  "description": "web application to sync files between local and remote computer",
+  "description": "The web application to sync files between local and remote computer",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
