@@ -4,6 +4,11 @@
   "description": "The web application to sync files between local and remote computer",
   "author": "zenga2",
   "private": true,
+  "keywords": [
+    "vue",
+    "vue-cli",
+    "code-mirror"
+  ],
   "scripts": {
     "dev": "node build/dev-server.js",
     "start": "node build/dev-server.js",
