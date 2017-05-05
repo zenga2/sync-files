@@ -1,10 +1,21 @@
 # sync-files
-The web application to sync files between local and remote computer
 
+> The web application to sync files between local and remote computer
 
-### 开发进度
-- [x] web版terminal -- 完成
-- [ ] 本地模块    -- 未完成
-- [ ] 服务器模块  -- 未完成
-- [ ] 权限控制    -- 未完成
-- [ ] 文件备份    -- 未完成
+## Build Setup
+
+``` bash
+# install dependencies
+npm install
+
+# serve with hot reload at localhost:8080
+npm run dev
+
+# build for production with minification
+npm run build
+
+# build for production and view the bundle analyzer report
+npm run build --report
+```
+
+For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
